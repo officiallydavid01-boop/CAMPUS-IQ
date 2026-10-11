@@ -1,0 +1,134 @@
+/**
+ * CampusIQ design tokens — "Midnight Aurora"
+ *
+ * Single source of truth for color, type, spacing, radius, shadow,
+ * motion and z-index values. Components must reference these
+ * variables rather than hardcoding raw values.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Color: surfaces ---- */
+  --bg-primary: #070A12;
+  --bg-surface: #0D1220;
+  --bg-surface-secondary: #111827;
+  --bg-glass: rgba(255, 255, 255, 0.06);
+  --border-glass: rgba(255, 255, 255, 0.10);
+  --border-glass-strong: rgba(255, 255, 255, 0.16);
+
+  /* ---- Color: accents ---- */
+  --accent-cyan: #00E5FF;
+  --accent-violet: #8B5CF6;
+  --accent-magenta: #D946EF;
+  --accent-gradient: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-violet) 55%, var(--accent-magenta) 100%);
+
+  /* ---- Color: text ---- */
+  --text-primary: #F4F7FB;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-on-accent: #051018;
+
+  /* ---- Color: semantic ---- */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-success-bg: rgba(34, 197, 94, 0.12);
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-error-bg: rgba(239, 68, 68, 0.12);
+
+  /* ---- Typography ---- */
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Space Grotesk", "Inter", -apple-system, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* ---- Spacing scale (4px base) ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ---- Radius ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* ---- Shadow ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --shadow-glow-cyan: 0 0 24px rgba(0, 229, 255, 0.25);
+  --shadow-glow-violet: 0 0 24px rgba(139, 92, 246, 0.25);
+
+  /* ---- Glass effect ---- */
+  --glass-blur: blur(16px);
+  --glass-blur-strong: blur(24px);
+
+  /* ---- Motion ---- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ---- Layout ---- */
+  --sidebar-width: 264px;
+  --bottom-nav-height: 64px;
+  --header-height: 64px;
+  --content-max-width: 1280px;
+
+  /* ---- Breakpoints (reference only — used in comments/JS, not directly in CSS) ---- */
+  /* xs: 320px, sm: 375px, md: 768px, lg: 1024px, xl: 1280px, 2xl: 1920px */
+
+  /* ---- Z-index ---- */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  /* ---- Safe areas (mobile status bar / home indicator) ---- */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Respect reduced-motion preference globally via a token components can check */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

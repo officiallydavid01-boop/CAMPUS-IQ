@@ -1,0 +1,73 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="campusiqLogoTitle">
+  <title id="campusiqLogoTitle">CampusIQ — holographic brain mark</title>
+  <defs>
+    <linearGradient id="brainStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00E5FF" />
+      <stop offset="55%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#D946EF" />
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#111C33" />
+      <stop offset="100%" stop-color="#070A12" />
+    </radialGradient>
+    <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="url(#bgGlow)" />
+
+  <!-- orbital rings -->
+  <g stroke="url(#brainStroke)" stroke-width="1.5" fill="none" opacity="0.35">
+    <ellipse cx="256" cy="256" rx="200" ry="88" transform="rotate(18 256 256)" />
+    <ellipse cx="256" cy="256" rx="190" ry="150" transform="rotate(-24 256 256)" />
+  </g>
+
+  <!-- brain silhouette, built from line strokes rather than a filled emoji shape -->
+  <g filter="url(#softGlow)" fill="none" stroke="url(#brainStroke)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- left hemisphere outline -->
+    <path d="M186 158
+             C142 158 108 190 104 230
+             C82 238 68 264 76 292
+             C64 308 66 336 84 352
+             C82 376 100 398 126 404
+             C136 424 158 436 182 434
+             C198 452 224 458 246 448" />
+    <!-- right hemisphere outline -->
+    <path d="M326 158
+             C370 158 404 190 408 230
+             C430 238 444 264 436 292
+             C448 308 446 336 428 352
+             C430 376 412 398 386 404
+             C376 424 354 436 330 434
+             C314 452 288 458 266 448" />
+    <!-- corpus callosum / central seam -->
+    <path d="M256 168 L256 442" stroke-width="4" opacity="0.55" />
+    <!-- gyri / sulci detail lines -->
+    <path d="M150 220 C176 208 196 224 190 248 C184 270 156 274 150 254" stroke-width="4" opacity="0.85" />
+    <path d="M118 288 C144 278 166 292 160 314" stroke-width="4" opacity="0.85" />
+    <path d="M140 360 C162 352 182 362 180 382" stroke-width="4" opacity="0.85" />
+    <path d="M362 220 C336 208 316 224 322 248 C328 270 356 274 362 254" stroke-width="4" opacity="0.85" />
+    <path d="M394 288 C368 278 346 292 352 314" stroke-width="4" opacity="0.85" />
+    <path d="M372 360 C350 352 330 362 332 382" stroke-width="4" opacity="0.85" />
+  </g>
+
+  <!-- energy nodes / particles -->
+  <g fill="#00E5FF">
+    <circle cx="104" cy="230" r="4.5" filter="url(#softGlow)" />
+    <circle cx="408" cy="230" r="4.5" filter="url(#softGlow)" />
+    <circle cx="76" cy="292" r="3.5" fill="#8B5CF6" filter="url(#softGlow)" />
+    <circle cx="436" cy="292" r="3.5" fill="#8B5CF6" filter="url(#softGlow)" />
+    <circle cx="126" cy="404" r="4" fill="#D946EF" filter="url(#softGlow)" />
+    <circle cx="386" cy="404" r="4" fill="#D946EF" filter="url(#softGlow)" />
+    <circle cx="256" cy="150" r="3.5" filter="url(#softGlow)" />
+    <circle cx="60" cy="180" r="2.5" opacity="0.8" />
+    <circle cx="452" cy="180" r="2.5" opacity="0.8" />
+    <circle cx="60" cy="340" r="2.5" opacity="0.8" fill="#D946EF" />
+    <circle cx="452" cy="340" r="2.5" opacity="0.8" fill="#D946EF" />
+  </g>
+</svg>

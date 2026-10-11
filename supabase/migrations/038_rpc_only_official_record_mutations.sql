@@ -1,0 +1,32 @@
+-- Official student attempts, answers, scores, role grants and gamification ledgers
+-- are mutated only by validated SECURITY DEFINER RPCs. Keep SELECT governed by RLS.
+revoke insert, update, delete on table
+  public.exam_attempts,
+  public.exam_answers,
+  public.practice_sessions,
+  public.practice_answers,
+  public.lesson_progress,
+  public.user_roles,
+  public.user_xp,
+  public.gamification_events,
+  public.competition_participants,
+  public.competition_attempts,
+  public.competition_answers,
+  public.competition_results,
+  public.competition_disputes,
+  public.competition_score_corrections,
+  public.competition_team_results,
+  public.department_competition_results,
+  public.competition_teams,
+  public.competition_team_members,
+  public.tournament_participants,
+  public.tournament_team_participants,
+  public.tournament_matches,
+  public.tournament_rounds,
+  public.tournament_match_results,
+  public.tournament_match_attempts,
+  public.tournament_match_answers,
+  public.tournament_team_match_attempts,
+  public.tournament_team_match_answers,
+  public.weekly_challenge_instances
+from anon, authenticated;

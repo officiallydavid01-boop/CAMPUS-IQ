@@ -1,0 +1,75 @@
+@import "./tokens.css";
+
+/**
+ * Shared component-level styles. Individual components primarily use
+ * inline styles / CSS variables (see src/components/ui) so they stay
+ * colocated and tree-shakeable; this file holds the handful of
+ * cross-cutting patterns (glass surface, skeleton shimmer, badges)
+ * that are easiest to express as reusable classes.
+ */
+
+.glass-surface {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-md);
+}
+
+.glass-surface--interactive {
+  transition: border-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.glass-surface--interactive:hover {
+  border-color: var(--border-glass-strong);
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-secondary) 25%,
+    rgba(255, 255, 255, 0.08) 37%,
+    var(--bg-surface-secondary) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@keyframes campusiq-spin {
+  to { transform: rotate(360deg); }
+}
+.campusiq-spin {
+  animation: campusiq-spin 0.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .campusiq-spin {
+    animation-duration: 1.6s;
+  }
+}

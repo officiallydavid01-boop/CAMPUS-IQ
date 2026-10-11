@@ -1,0 +1,75 @@
+/**
+ * Central path constants (Master Spec section 79). Import ROUTES rather
+ * than typing path strings inline, so a future path rename is a one-line
+ * change here instead of a find-and-replace across every <Link>.
+ */
+export const ROUTES = {
+  // Public
+  home: "/",
+  login: "/login",
+  register: "/register",
+  forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
+  support: "/support",
+
+  // Onboarding
+  onboarding: "/onboarding",
+
+  // Student
+  dashboard: "/dashboard",
+  courses: "/courses",
+  courseDetail: "/courses/:id",
+  topicDetail: "/courses/:id/topics/:topicId",
+  lessonDetail: "/lessons/:id",
+  practice: "/practice",
+  practiceSession: "/practice/:id",
+  pastQuestions: "/past-questions",
+  exams: "/exams",
+  examDetail: "/exams/:id",
+  resultDetail: "/results/:id",
+  planner: "/planner",
+  notes: "/notes",
+  bookmarks: "/bookmarks",
+  analytics: "/analytics",
+  notifications: "/notifications",
+  competitions: "/competitions",
+  competitionDetail: "/competitions/:id",
+  tournaments: "/tournaments",
+  tournamentDetail: "/tournaments/:id",
+  tournamentMatchDetail: "/tournaments/:id/matches/:matchId",
+  achievements: "/achievements",
+  profile: "/profile",
+  settings: "/settings",
+  settingsAcademicProfile: "/settings/academic-profile",
+
+  // Admin
+  admin: "/admin",
+  adminInstitutions: "/admin/institutions",
+  adminFaculties: "/admin/faculties",
+  adminDepartments: "/admin/departments",
+  adminProgrammes: "/admin/programmes",
+  adminLevels: "/admin/levels",
+  adminSessions: "/admin/sessions",
+  adminSemesters: "/admin/semesters",
+  adminCourses: "/admin/courses",
+  adminCourseOfferings: "/admin/course-offerings",
+  adminTopics: "/admin/topics",
+  adminLessons: "/admin/lessons",
+  adminMaterials: "/admin/materials",
+  adminQuestions: "/admin/questions",
+  adminPastQuestions: "/admin/past-questions",
+  adminExams: "/admin/exams",
+  adminExamReview: "/admin/exams/review",
+  adminUsers: "/admin/users",
+  adminCompetitions: "/admin/competitions",
+  adminTournaments: "/admin/tournaments",
+  adminAnnouncements: "/admin/announcements",
+  adminNotifications: "/admin/notifications",
+  adminFiles: "/admin/files",
+  adminAchievements: "/admin/achievements",
+  adminQuests: "/admin/quests",
+  adminXp: "/admin/xp",
+  adminLeaderboards: "/admin/leaderboards",
+  adminAuditLogs: "/admin/audit-logs",
+  adminSettings: "/admin/settings",
+} as const;

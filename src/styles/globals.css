@@ -1,0 +1,98 @@
+@import "./tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: var(--safe-top);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  background-image:
+    radial-gradient(60% 50% at 20% 0%, rgba(0, 229, 255, 0.06), transparent 60%),
+    radial-gradient(50% 40% at 85% 15%, rgba(139, 92, 246, 0.07), transparent 60%),
+    radial-gradient(45% 35% at 60% 100%, rgba(217, 70, 239, 0.05), transparent 60%);
+  background-attachment: fixed;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+#root {
+  min-height: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Visible keyboard focus everywhere — never remove this without a replacement */
+:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: rgba(0, 229, 255, 0.25);
+  color: var(--text-primary);
+}
+
+/* Horizontal-scroll containers for wide content (tables, code, diagrams) so
+   the page body itself never scrolls sideways on small screens. */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
