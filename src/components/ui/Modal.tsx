@@ -8,32 +8,41 @@ interface ModalProps {
   children: ReactNode;
 }
 
-/**
- * Accessible dialog: traps focus to itself, closes on Escape, restores
- * focus to the trigger element on close, and is announced via role="dialog"
- * + aria-modal (Master Spec section 64: "accessible modals").
- */
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const previouslyFocused = useRef<HTMLElement | null>(null);
-
+  const dialogRef = useRef < HTMLDivElement > (null);
+  const previouslyFocused = useRef < HTMLElement | null > (null);
+  const onCloseRef = useRef(onClose);
+  
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+  
   useEffect(() => {
     if (!isOpen) return;
+    
     previouslyFocused.current = document.activeElement as HTMLElement;
     dialogRef.current?.focus();
-
+    
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onCloseRef.current();
+      }
     }
+    
     document.addEventListener("keydown", handleKeyDown);
+    
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      previouslyFocused.current?.focus();
+      
+      const previousElement = previouslyFocused.current;
+      if (previousElement && document.contains(previousElement)) {
+        previousElement.focus();
+      }
     };
-  }, [isOpen, onClose]);
-
+  }, [isOpen]);
+  
   if (!isOpen) return null;
-
+  
   return (
     <div
       style={{
@@ -48,7 +57,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         backdropFilter: "var(--glass-blur)",
       }}
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) onCloseRef.current();
       }}
     >
       <div
@@ -67,14 +76,26 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           background: "var(--bg-surface)",
         }}
       >
-        <div className="cluster" style={{ justifyContent: "space-between", marginBottom: "var(--space-4)" }}>
+        <div
+          className="cluster"
+          style={{
+            justifyContent: "space-between",
+            marginBottom: "var(--space-4)",
+          }}
+        >
           <h2 id="modal-title" style={{ fontSize: "var(--text-xl)" }}>
             {title}
           </h2>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={() => onCloseRef.current()}
             aria-label="Close dialog"
-            style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer" }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+            }}
           >
             <X size={20} />
           </button>
