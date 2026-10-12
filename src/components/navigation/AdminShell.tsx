@@ -23,10 +23,19 @@ import { HolographicBrain } from "@/components/branding/HolographicBrain";
 import { signOut } from "@/services/auth/authService";
 import { ROUTES } from "@/app/router/routes";
 
+
 const ADMIN_NAV = [
   { to: ROUTES.admin, label: "Dashboard", icon: LayoutDashboard },
   { to: ROUTES.adminInstitutions, label: "Academic structure", icon: GraduationCap },
-  { to: ROUTES.adminCourses, label: "Courses & content", icon: BookOpen },
+
+  { to: ROUTES.adminCourses, label: "Courses", icon: BookOpen },
+  { to: ROUTES.adminCourseOfferings, label: "Course offerings", icon: GraduationCap },
+  { to: ROUTES.adminTopics, label: "Topics", icon: BookOpen },
+  { to: ROUTES.adminLessons, label: "Lessons", icon: BookOpen },
+  { to: ROUTES.adminMaterials, label: "Learning materials", icon: BookOpen },
+  { to: ROUTES.adminQuestions, label: "Question bank", icon: ClipboardCheck },
+  { to: ROUTES.adminPastQuestions, label: "Past questions", icon: ClipboardCheck },
+
   { to: ROUTES.adminExams, label: "Exams", icon: ClipboardCheck },
   { to: ROUTES.adminExamReview, label: "Manual marking", icon: ClipboardCheck },
   { to: ROUTES.adminXp, label: "XP & levels", icon: Zap },
