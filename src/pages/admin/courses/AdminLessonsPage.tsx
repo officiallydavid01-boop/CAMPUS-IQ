@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { clearDraft, loadDraft, saveDraft } from "@/utils/draftStorage";
 import { Plus, Pencil } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
@@ -32,6 +33,14 @@ const emptyForm = {
   displayOrder: 0,
   status: "draft" as ContentStatus,
 };
+type LessonDraft = {
+  topicId: string;
+  lessonId: string | null;
+  form: typeof emptyForm;
+};
+function getLessonDraftKey(topicId: string, lessonId: string | null): string {
+  return `lesson:${topicId}:${lessonId ?? "new"}`;
+}
 
 /** Institution -> Faculty -> Department -> Course -> Topic -> manage
  * Lessons (Master Spec section 27's full lesson-editor field set). */
@@ -51,7 +60,22 @@ export function AdminLessonsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [editing, setEditing] = useState<Lesson | "new" | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const draftKeyRef = useRef<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  useEffect(() => {
+    if (editing === null || !topicId || !draftKeyRef.current) return;
+
+    const key = draftKeyRef.current;
+    const lessonId = editing === "new" ? null : editing.id;
+
+    saveDraft<LessonDraft>(key, {
+      topicId,
+      lessonId,
+      form,
+    });
+  }, [form, editing, topicId]);
+
 
   useEffect(() => {
     listInstitutions().then(setInstitutions).catch(() => showToast("Couldn't load institutions.", "error"));
@@ -88,12 +112,32 @@ export function AdminLessonsPage() {
     else setLessons([]);
   }, [topicId]);
 
+
   function openCreate() {
-    setForm({ ...emptyForm, displayOrder: lessons.length });
+    const key = getLessonDraftKey(topicId, null);
+    const draft = loadDraft<LessonDraft>(key);
+    const initialForm = {
+      ...emptyForm,
+      displayOrder: lessons.length,
+    };
+
+    draftKeyRef.current = key;
+
+    if (draft && draft.data.topicId === topicId && draft.data.lessonId === null) {
+  setForm(draft.data.form);
+  showToast("Unsaved lesson draft restored.", "success");
+} else {
+  setForm(initialForm);
+}
+
     setEditing("new");
   }
+
   function openEdit(l: Lesson) {
-    setForm({
+    const key = getLessonDraftKey(topicId, l.id);
+    const draft = loadDraft<LessonDraft>(key);
+
+    const savedForm = {
       title: l.title,
       introduction: l.introduction ?? "",
       coreConcept: l.core_concept ?? "",
@@ -104,9 +148,20 @@ export function AdminLessonsPage() {
       estimatedReadingMinutes: l.estimated_reading_minutes ?? 5,
       displayOrder: l.display_order,
       status: l.status,
-    });
+    };
+
+    draftKeyRef.current = key;
+
+    if (draft && draft.data.topicId === topicId && draft.data.lessonId === l.id) {
+  setForm(draft.data.form);
+  showToast("Unsaved lesson draft restored.", "success");
+} else {
+  setForm(savedForm);
+}
+
     setEditing(l);
   }
+
 
   async function handleSave() {
     if (!topicId) return;
@@ -141,6 +196,10 @@ export function AdminLessonsPage() {
           status: form.status,
         });
         showToast("Lesson updated.", "success");
+      }
+      if (draftKeyRef.current) {
+        clearDraft(draftKeyRef.current);
+        draftKeyRef.current = null;
       }
       setEditing(null);
       await refresh(topicId);
