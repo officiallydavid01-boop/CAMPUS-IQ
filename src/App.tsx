@@ -34,6 +34,7 @@ import { AdminProgrammesPage } from "@/pages/admin/academic/AdminProgrammesPage"
 import { AdminLevelsPage } from "@/pages/admin/academic/AdminLevelsPage";
 import { AdminSessionsPage } from "@/pages/admin/academic/AdminSessionsPage";
 import { AdminSemestersPage } from "@/pages/admin/academic/AdminSemestersPage";
+import { AcademicStructureNav } from "@/pages/admin/academic/AcademicStructureNav";
 import { AdminCoursesPage } from "@/pages/admin/courses/AdminCoursesPage";
 import { AdminCourseOfferingsPage } from "@/pages/admin/courses/AdminCourseOfferingsPage";
 import { AdminTopicsPage } from "@/pages/admin/courses/AdminTopicsPage";
@@ -285,25 +286,31 @@ export function App() {
           }
         />
         <Route
-          path={ROUTES.adminInstitutions}
-          element={
-            <AdminRoute>
-              <AdminShell>
-                <AdminInstitutionsPage />
-              </AdminShell>
-            </AdminRoute>
-          }
-        />
+  path={ROUTES.adminInstitutions}
+  element={
+    <AdminRoute>
+      <AdminShell>
+        <>
+          <AcademicStructureNav />
+          <AdminInstitutionsPage />
+        </>
+      </AdminShell>
+    </AdminRoute>
+  }
+/>
         <Route
-          path={ROUTES.adminFaculties}
-          element={
-            <AdminRoute>
-              <AdminShell>
-                <AdminFacultiesPage />
-              </AdminShell>
-            </AdminRoute>
-          }
-        />
+  path={ROUTES.adminFaculties}
+  element={
+    <AdminRoute>
+      <AdminShell>
+        <>
+          <AcademicStructureNav />
+          <AdminFacultiesPage />
+        </>
+      </AdminShell>
+    </AdminRoute>
+  }
+/>
         <Route
           path={ROUTES.adminDepartments}
           element={
