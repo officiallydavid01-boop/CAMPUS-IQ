@@ -312,51 +312,68 @@ export function App() {
   }
 />
         <Route
-          path={ROUTES.adminDepartments}
-          element={
-            <AdminRoute>
-              <AdminShell>
-                <AdminDepartmentsPage />
-              </AdminShell>
-            </AdminRoute>
-          }
-        />
+  path={ROUTES.adminDepartments}
+  element={
+    <AdminRoute>
+      <AdminShell>
+        <>
+          <AcademicStructureNav />
+          <AdminDepartmentsPage />
+        </>
+      </AdminShell>
+    </AdminRoute>
+  }
+/>
         <Route
-          path={ROUTES.adminProgrammes}
-          element={
-            <AdminRoute>
-              <AdminShell>
-                <AdminProgrammesPage />
-              </AdminShell>
-            </AdminRoute>
-          }
-        />
-        <Route
+  path={ROUTES.adminProgrammes}
+  element={
+    <AdminRoute>
+      <AdminShell>
+        <>
+          <AcademicStructureNav />
+          <AdminProgrammesPage />
+        </>
+      </AdminShell>
+    </AdminRoute>
+  }
+/>
+ <Route
           path={ROUTES.adminLevels}
           element={
             <AdminRoute>
               <AdminShell>
-                <AdminLevelsPage />
+                <>
+                  <AcademicStructureNav />
+                  <AdminLevelsPage />
+                </>
               </AdminShell>
             </AdminRoute>
           }
         />
+
         <Route
           path={ROUTES.adminSessions}
           element={
             <AdminRoute>
               <AdminShell>
-                <AdminSessionsPage />
+                <>
+                  <AcademicStructureNav />
+                  <AdminSessionsPage />
+                </>
               </AdminShell>
             </AdminRoute>
           }
         />
+
         <Route
           path={ROUTES.adminSemesters}
           element={
             <AdminRoute>
               <AdminShell>
-                <AdminSemestersPage />
+                <>
+                  <AcademicStructureNav />
+                  <AdminSemestersPage />
+                </>
               </AdminShell>
             </AdminRoute>
           }
