@@ -1,11 +1,11 @@
 
 import { useEffect, useRef, useState } from "react";
+import LessonContentEditor from "../../components/admin/LessonContentEditor";
 import { clearDraft, loadDraft, saveDraft } from "@/utils/draftstorage";
 import { Plus, Pencil } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/Badge";
@@ -16,8 +16,8 @@ import {
   listDepartments,
 } from "@/services/academic/academicService";
 import { adminListCourses } from "@/services/courses/adminCoursesService";
-import { adminListTopics } from "@/services/courses/adminContentService";
 import {
+  adminListTopics,
   adminListLessons,
   createLesson,
   updateLesson,
@@ -63,7 +63,10 @@ type LessonSelectionDraft = {
 
 const LESSON_SELECTION_DRAFT_KEY = "lesson-selections";
 
-function getLessonDraftKey(topicId: string, lessonId: string | null): string {
+function getLessonDraftKey(
+  topicId: string,
+  lessonId: string | null
+): string {
   return `lesson:${topicId}:${lessonId ?? "new"}`;
 }
 
@@ -72,7 +75,10 @@ function saveLessonSelections(data: LessonSelectionDraft): void {
 }
 
 function loadLessonSelections(): LessonSelectionDraft | null {
-  return loadDraft<LessonSelectionDraft>(LESSON_SELECTION_DRAFT_KEY)?.data ?? null;
+  return (
+    loadDraft<LessonSelectionDraft>(LESSON_SELECTION_DRAFT_KEY)?.data ??
+    null
+  );
 }
 
 /** Institution -> Faculty -> Department -> Course -> Topic -> Lessons. */
@@ -81,14 +87,19 @@ export function AdminLessonsPage() {
 
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [institutionId, setInstitutionId] = useState("");
+
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [facultyId, setFacultyId] = useState("");
+
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentId, setDepartmentId] = useState("");
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseId, setCourseId] = useState("");
+
   const [topics, setTopics] = useState<CourseTopic[]>([]);
   const [topicId, setTopicId] = useState("");
+
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editing, setEditing] = useState<Lesson | "new" | null>(null);
@@ -97,12 +108,12 @@ export function AdminLessonsPage() {
 
   const draftKeyRef = useRef<string | null>(null);
 
-  // Holds the saved selections until the dependent dropdowns are restored.
+  // Restore previously saved academic selections.
   const restoreRef = useRef<LessonSelectionDraft | null>(
     loadLessonSelections()
   );
 
-  // Prevent older network responses from replacing newer dropdown choices.
+  // Prevent stale network responses from replacing newer selections.
   const requestVersions = useRef({
     institutions: 0,
     faculties: 0,
@@ -112,7 +123,7 @@ export function AdminLessonsPage() {
     lessons: 0,
   });
 
-  // Persist academic selections, except while the saved hierarchy is restoring.
+  // Persist the selected academic hierarchy.
   useEffect(() => {
     if (restoreRef.current) return;
 
@@ -125,9 +136,11 @@ export function AdminLessonsPage() {
     });
   }, [institutionId, facultyId, departmentId, courseId, topicId]);
 
-  // Automatically save the unfinished lesson form on every change.
+  // Automatically save unfinished lesson content.
   useEffect(() => {
-    if (editing === null || !topicId || !draftKeyRef.current) return;
+    if (editing === null || !topicId || !draftKeyRef.current) {
+      return;
+    }
 
     const key = draftKeyRef.current;
     const lessonId = editing === "new" ? null : editing.id;
@@ -139,19 +152,28 @@ export function AdminLessonsPage() {
     });
   }, [form, editing, topicId]);
 
-  // Load institutions, then begin restoring the saved selection hierarchy.
+  // Load institutions and begin restoring the saved hierarchy.
   useEffect(() => {
     let active = true;
     const version = ++requestVersions.current.institutions;
 
     listInstitutions()
       .then((rows) => {
-        if (!active || version !== requestVersions.current.institutions) return;
+        if (
+          !active ||
+          version !== requestVersions.current.institutions
+        ) {
+          return;
+        }
 
         setInstitutions(rows);
 
         const saved = restoreRef.current;
-        if (saved?.institutionId && rows.some((row) => row.id === saved.institutionId)) {
+
+        if (
+          saved?.institutionId &&
+          rows.some((row) => row.id === saved.institutionId)
+        ) {
           setInstitutionId(saved.institutionId);
         } else if (saved) {
           restoreRef.current = null;
@@ -169,7 +191,7 @@ export function AdminLessonsPage() {
     };
   }, [showToast]);
 
-  // Institution -> Faculty
+  // Institution -> Faculty.
   useEffect(() => {
     const version = ++requestVersions.current.faculties;
     const saved = restoreRef.current;
@@ -190,12 +212,20 @@ export function AdminLessonsPage() {
 
     listFaculties(institutionId)
       .then((rows) => {
-        if (!active || version !== requestVersions.current.faculties) return;
+        if (
+          !active ||
+          version !== requestVersions.current.faculties
+        ) {
+          return;
+        }
 
         setFaculties(rows);
 
         if (saved && saved.institutionId === institutionId) {
-          if (saved.facultyId && rows.some((row) => row.id === saved.facultyId)) {
+          if (
+            saved.facultyId &&
+            rows.some((row) => row.id === saved.facultyId)
+          ) {
             setFacultyId(saved.facultyId);
           } else {
             restoreRef.current = null;
@@ -207,6 +237,7 @@ export function AdminLessonsPage() {
           if (restoreRef.current?.institutionId === institutionId) {
             restoreRef.current = null;
           }
+
           showToast("Couldn't load faculties.", "error");
         }
       });
@@ -216,7 +247,7 @@ export function AdminLessonsPage() {
     };
   }, [institutionId, showToast]);
 
-  // Faculty -> Department
+  // Faculty -> Department.
   useEffect(() => {
     const version = ++requestVersions.current.departments;
     const saved = restoreRef.current;
@@ -235,12 +266,20 @@ export function AdminLessonsPage() {
 
     listDepartments(facultyId)
       .then((rows) => {
-        if (!active || version !== requestVersions.current.departments) return;
+        if (
+          !active ||
+          version !== requestVersions.current.departments
+        ) {
+          return;
+        }
 
         setDepartments(rows);
 
         if (saved && saved.facultyId === facultyId) {
-          if (saved.departmentId && rows.some((row) => row.id === saved.departmentId)) {
+          if (
+            saved.departmentId &&
+            rows.some((row) => row.id === saved.departmentId)
+          ) {
             setDepartmentId(saved.departmentId);
           } else {
             restoreRef.current = null;
@@ -252,6 +291,7 @@ export function AdminLessonsPage() {
           if (restoreRef.current?.facultyId === facultyId) {
             restoreRef.current = null;
           }
+
           showToast("Couldn't load departments.", "error");
         }
       });
@@ -261,7 +301,7 @@ export function AdminLessonsPage() {
     };
   }, [facultyId, showToast]);
 
-  // Department -> Course
+  // Department -> Course.
   useEffect(() => {
     const version = ++requestVersions.current.courses;
     const saved = restoreRef.current;
@@ -278,12 +318,20 @@ export function AdminLessonsPage() {
 
     adminListCourses(departmentId)
       .then((rows) => {
-        if (!active || version !== requestVersions.current.courses) return;
+        if (
+          !active ||
+          version !== requestVersions.current.courses
+        ) {
+          return;
+        }
 
         setCourses(rows);
 
         if (saved && saved.departmentId === departmentId) {
-          if (saved.courseId && rows.some((row) => row.id === saved.courseId)) {
+          if (
+            saved.courseId &&
+            rows.some((row) => row.id === saved.courseId)
+          ) {
             setCourseId(saved.courseId);
           } else {
             restoreRef.current = null;
@@ -295,6 +343,7 @@ export function AdminLessonsPage() {
           if (restoreRef.current?.departmentId === departmentId) {
             restoreRef.current = null;
           }
+
           showToast("Couldn't load courses.", "error");
         }
       });
@@ -304,7 +353,7 @@ export function AdminLessonsPage() {
     };
   }, [departmentId, showToast]);
 
-  // Course -> Topic
+  // Course -> Topic.
   useEffect(() => {
     const version = ++requestVersions.current.topics;
     const saved = restoreRef.current;
@@ -319,19 +368,27 @@ export function AdminLessonsPage() {
 
     adminListTopics(courseId)
       .then((rows) => {
-        if (!active || version !== requestVersions.current.topics) return;
+        if (
+          !active ||
+          version !== requestVersions.current.topics
+        ) {
+          return;
+        }
 
         setTopics(rows);
 
         if (saved && saved.courseId === courseId) {
-          if (saved.topicId && rows.some((row) => row.id === saved.topicId)) {
+          if (
+            saved.topicId &&
+            rows.some((row) => row.id === saved.topicId)
+          ) {
             setTopicId(saved.topicId);
           } else {
             restoreRef.current = null;
           }
         }
 
-        // The hierarchy is restored or the saved path is no longer valid.
+        // The hierarchy is restored or its saved path is invalid.
         if (restoreRef.current?.courseId === courseId) {
           restoreRef.current = null;
         }
@@ -341,6 +398,7 @@ export function AdminLessonsPage() {
           if (restoreRef.current?.courseId === courseId) {
             restoreRef.current = null;
           }
+
           showToast("Couldn't load topics.", "error");
         }
       });
@@ -386,6 +444,7 @@ export function AdminLessonsPage() {
 
     const key = getLessonDraftKey(topicId, null);
     const draft = loadDraft<LessonDraft>(key);
+
     const initialForm = {
       ...emptyForm,
       displayOrder: lessons.length,
@@ -393,7 +452,11 @@ export function AdminLessonsPage() {
 
     draftKeyRef.current = key;
 
-    if (draft && draft.data.topicId === topicId && draft.data.lessonId === null) {
+    if (
+      draft &&
+      draft.data.topicId === topicId &&
+      draft.data.lessonId === null
+    ) {
       setForm(draft.data.form);
       showToast("Unsaved lesson draft restored.", "success");
     } else {
@@ -424,7 +487,11 @@ export function AdminLessonsPage() {
 
     draftKeyRef.current = key;
 
-    if (draft && draft.data.topicId === topicId && draft.data.lessonId === lesson.id) {
+    if (
+      draft &&
+      draft.data.topicId === topicId &&
+      draft.data.lessonId === lesson.id
+    ) {
       setForm(draft.data.form);
       showToast("Unsaved lesson draft restored.", "success");
     } else {
@@ -437,7 +504,8 @@ export function AdminLessonsPage() {
   function closeEditor() {
     setEditing(null);
     draftKeyRef.current = null;
-    // Keep the saved draft so it can be recovered if the editor is reopened.
+
+    // Keep the saved draft so it can be recovered later.
   }
 
   async function handleSave() {
@@ -494,7 +562,11 @@ export function AdminLessonsPage() {
   }
 
   const columns: DataTableColumn<Lesson>[] = [
-    { key: "order", header: "#", render: (row) => row.display_order },
+    {
+      key: "order",
+      header: "#",
+      render: (row) => row.display_order,
+    },
     {
       key: "title",
       header: "Title",
@@ -505,7 +577,9 @@ export function AdminLessonsPage() {
       key: "minutes",
       header: "Read time",
       render: (row) =>
-        row.estimated_reading_minutes ? `${row.estimated_reading_minutes} min` : "—",
+        row.estimated_reading_minutes
+          ? `${row.estimated_reading_minutes} min`
+          : "—",
     },
     {
       key: "status",
@@ -516,7 +590,12 @@ export function AdminLessonsPage() {
 
   return (
     <div className="container" style={{ paddingBlock: "var(--space-8)" }}>
-      <h1 style={{ fontSize: "var(--text-2xl)", marginBottom: "var(--space-6)" }}>
+      <h1
+        style={{
+          fontSize: "var(--text-2xl)",
+          marginBottom: "var(--space-6)",
+        }}
+      >
         Lessons
       </h1>
 
@@ -666,65 +745,83 @@ export function AdminLessonsPage() {
             required
             value={form.title}
             onChange={(event) =>
-              setForm((current) => ({ ...current, title: event.target.value }))
-            }
-          />
-
-          <Textarea
-            label="Introduction"
-            rows={2}
-            value={form.introduction}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, introduction: event.target.value }))
-            }
-          />
-
-          <Textarea
-            label="Core concept"
-            rows={2}
-            value={form.coreConcept}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, coreConcept: event.target.value }))
-            }
-          />
-
-          <Textarea
-            label="Detailed explanation"
-            rows={5}
-            value={form.detailedExplanation}
-            onChange={(event) =>
               setForm((current) => ({
                 ...current,
-                detailedExplanation: event.target.value,
+                title: event.target.value,
               }))
             }
           />
 
-          <Textarea
+          <LessonContentEditor
+            label="Introduction"
+            value={form.introduction}
+            onChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                introduction: value,
+              }))
+            }
+            minRows={5}
+          />
+
+          <LessonContentEditor
+            label="Core Concept"
+            value={form.coreConcept}
+            onChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                coreConcept: value,
+              }))
+            }
+            minRows={6}
+          />
+
+          <LessonContentEditor
+            label="Detailed Explanation"
+            value={form.detailedExplanation}
+            onChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                detailedExplanation: value,
+              }))
+            }
+            minRows={10}
+          />
+
+          <LessonContentEditor
             label="Examples"
-            rows={3}
             value={form.examples}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, examples: event.target.value }))
+            onChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                examples: value,
+              }))
             }
+            minRows={6}
           />
 
-          <Textarea
+          <LessonContentEditor
             label="Formulas"
-            rows={2}
             value={form.formulas}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, formulas: event.target.value }))
+            onChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                formulas: value,
+              }))
             }
+            minRows={4}
           />
 
-          <Textarea
+          <LessonContentEditor
             label="Notes"
-            rows={2}
             value={form.notes}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, notes: event.target.value }))
+            onChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                notes: value,
+              }))
             }
+            minRows={5}
           />
 
           <Input
