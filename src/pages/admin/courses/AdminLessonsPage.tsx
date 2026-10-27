@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import LessonContentEditor from "../../components/admin/LessonContentEditor";
+import LessonContentEditor from "../LessonContentEditor";
 import { clearDraft, loadDraft, saveDraft } from "@/utils/draftstorage";
 import { Plus, Pencil } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
