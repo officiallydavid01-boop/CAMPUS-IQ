@@ -24,6 +24,7 @@
     "react-router-dom": "^6.26.2",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.0",
+    "remark-math": "^6.0.0",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
