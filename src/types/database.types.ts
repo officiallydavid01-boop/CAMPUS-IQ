@@ -203,6 +203,18 @@ export interface CourseOffering {
   updated_at: string;
 }
 
+export type CourseContentLinkStatus = "pending" | "approved" | "rejected";
+
+export interface CourseContentLink {
+  id: string;
+  source_course_id: string;
+  linked_course_id: string;
+  status: CourseContentLinkStatus;
+  created_at: string;
+  created_by: string | null;
+}
+
+
 /** Shape returned by the "student course filtering" query — see
  * services/courses/coursesService.ts `getCourseOfferingsForContext`. */
 export interface CourseOfferingWithCourse extends CourseOffering {
@@ -505,6 +517,7 @@ export interface ExamQuestionWithDetails {
   question: Database["public"]["Views"]["questions_public"]["Row"];
   options: Database["public"]["Views"]["question_options_public"]["Row"][];
 }
+
 
 // ---- Supabase Database generic (for createClient<Database>) ----------
 // Deliberately partial: only the tables/views current Phase 1 services
@@ -823,6 +836,32 @@ export interface Database {
         Update: Partial<Course>;
         Relationships: [];
       };
+      
+course_content_links: {
+  Row: CourseContentLink;
+  Insert: Partial<CourseContentLink> & {
+    source_course_id: string;
+    linked_course_id: string;
+  };
+  Update: Partial<CourseContentLink>;
+  Relationships: [
+    {
+      foreignKeyName: "course_content_links_source_course_id_fkey";
+      columns: ["source_course_id"];
+      isOneToOne: false;
+      referencedRelation: "courses";
+      referencedColumns: ["id"];
+    },
+    {
+      foreignKeyName: "course_content_links_linked_course_id_fkey";
+      columns: ["linked_course_id"];
+      isOneToOne: false;
+      referencedRelation: "courses";
+      referencedColumns: ["id"];
+    }
+  ];
+};
+
       course_offerings: {
         Row: CourseOffering;
         Insert: Partial<CourseOffering>;

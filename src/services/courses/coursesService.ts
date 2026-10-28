@@ -1,19 +1,18 @@
+
 import { supabase } from "@/services/supabase/client";
-import type { CourseOfferingWithCourse, CourseTopic, Lesson, MaterialWithFile } from "@/types/database.types";
+import type {
+  CourseOfferingWithCourse,
+  CourseTopic,
+  Lesson,
+  MaterialWithFile,
+} from "@/types/database.types";
 
 /**
- * "Student course filtering" (Master Spec "IMPORTANT CLARIFICATION"):
- * the course list shown to a student is derived entirely from their
- * current academic context (institution/programme/level/semester),
- * queried live against course_offerings — never a hardcoded or
- * client-cached list. Changing context (services/academic) and re-calling
- * this function is the entire mechanism; no source code change is needed
- * for a new semester's offerings to appear.
+ * Student course filtering:
+ * Course offerings are derived from the student's current academic
+ * context and fetched live from course_offerings.
  *
- * RLS (012_rls.sql, "read published course_offerings") already guarantees
- * a student can only ever receive published rows here — the filters below
- * narrow *which* published rows, not whether unpublished ones leak
- * through.
+ * RLS remains responsible for restricting access to published offerings.
  */
 export async function getCourseOfferingsForContext(context: {
   institutionId: string;
@@ -32,86 +31,185 @@ export async function getCourseOfferingsForContext(context: {
     .order("created_at");
 
   if (error) throw error;
+
   return (data ?? []) as unknown as CourseOfferingWithCourse[];
 }
 
-export async function enrollInOffering(_studentId: string, courseOfferingId: string) {
-  // The database derives the authenticated user and validates academic context
-  // and capacity. Never trust a student ID supplied by the browser.
-  const { error } = await supabase.rpc("enroll_in_course_offering", { p_course_offering_id: courseOfferingId });
+/**
+ * Enroll the authenticated student in an offering.
+ * The database RPC determines the student identity and validates
+ * the academic context and course capacity.
+ */
+export async function enrollInOffering(
+  _studentId: string,
+  courseOfferingId: string
+) {
+  const { error } = await supabase.rpc("enroll_in_course_offering", {
+    p_course_offering_id: courseOfferingId,
+  });
+
   if (error) throw error;
 }
 
+/**
+ * Returns the student's full enrollment history, including previous
+ * semesters and levels.
+ */
 export async function listMyEnrollments(studentId: string) {
-  // Full history, not just the current context — deliberately unfiltered
-  // by semester/level so a student's past enrollments remain visible
-  // after they progress (see 004_academic_structure.sql design note).
   const { data, error } = await supabase
     .from("course_enrollments")
     .select("*, course_offering:course_offerings(*, course:courses(*))")
     .eq("student_id", studentId)
     .order("enrolled_at", { ascending: false });
+
   if (error) throw error;
+
   return data ?? [];
 }
 
-// ========================================================================
-// Topics, lessons & materials (Phase 4) — student-facing reads only.
-// ========================================================================
-// Every function below relies entirely on RLS ("read published ...") to
-// keep draft/review/archived content invisible — none of these add their
-// own status filter, because the database is the actual gate, not the
-// query shape. See docs/database-architecture.md "Publishing model".
-
-export async function getCourseOfferingById(id: string): Promise<CourseOfferingWithCourse | null> {
+/**
+ * Retrieves a course offering by ID.
+ */
+export async function getCourseOfferingById(
+  id: string
+): Promise<CourseOfferingWithCourse | null> {
   const { data, error } = await supabase
     .from("course_offerings")
     .select("*, course:courses(*)")
     .eq("id", id)
     .maybeSingle();
+
   if (error) throw error;
+
   return data as unknown as CourseOfferingWithCourse | null;
 }
 
-export async function getCourseTopics(courseId: string): Promise<CourseTopic[]> {
+/**
+ * Retrieves topics belonging to a course and any approved canonical
+ * content sources linked to that course.
+ *
+ * Link direction:
+ *   source_course_id -> linked_course_id
+ *
+ * A linked course receives topics from its approved source courses,
+ * while retaining its own department-specific topics.
+ *
+ * Topics and lessons are not copied. Their original IDs remain intact,
+ * preserving existing references used by lessons and student progress.
+ *
+ * Database RLS policies remain responsible for access control.
+ */
+export async function getCourseTopics(
+  courseId: string
+): Promise<CourseTopic[]> {
+  // Fetch approved canonical sources linked to this course.
+  // The generated database types may not yet contain the new table,
+  // so the cast is limited to this query.
+
+  const { data: links, error: linksError } = await supabase
+    .from("course_content_links")
+    .select("source_course_id")
+    .eq("linked_course_id", courseId)
+    .eq("status", "approved");
+
+  if (linksError) throw linksError;
+
+  const sourceCourseIds: string[] = [
+    ...new Set(
+      (links ?? [])
+        .map((link) => link.source_course_id)
+        .filter((id) => Boolean(id) && id !== courseId)
+    ),
+  ];
+
+
+  // Include both local content and approved shared source content.
+  const courseIds = [
+    ...new Set([courseId, ...sourceCourseIds]),
+  ];
+
   const { data, error } = await supabase
     .from("course_topics")
     .select("*")
-    .eq("course_id", courseId)
+    .in("course_id", courseIds)
     .order("display_order");
+
   if (error) throw error;
-  return data ?? [];
+
+  // Deduplicate by the actual topic ID, never by title.
+  // Different topics can legitimately have the same title.
+  const uniqueTopics = new Map<string, CourseTopic>();
+
+  for (const topic of data ?? []) {
+    uniqueTopics.set(topic.id, topic as CourseTopic);
+  }
+
+  return [...uniqueTopics.values()];
 }
 
-export async function getTopicById(topicId: string): Promise<CourseTopic | null> {
-  const { data, error } = await supabase.from("course_topics").select("*").eq("id", topicId).maybeSingle();
+/**
+ * Retrieves a single topic by its original ID.
+ */
+export async function getTopicById(
+  topicId: string
+): Promise<CourseTopic | null> {
+  const { data, error } = await supabase
+    .from("course_topics")
+    .select("*")
+    .eq("id", topicId)
+    .maybeSingle();
+
   if (error) throw error;
+
   return data;
 }
 
-export async function getTopicLessons(topicId: string): Promise<Lesson[]> {
+/**
+ * Retrieves lessons for a topic.
+ * Shared topics use their original topic IDs, so no lesson copying
+ * or separate shared-lesson lookup is required.
+ */
+export async function getTopicLessons(
+  topicId: string
+): Promise<Lesson[]> {
   const { data, error } = await supabase
     .from("lessons")
     .select("*")
     .eq("topic_id", topicId)
     .order("display_order");
+
   if (error) throw error;
+
   return data ?? [];
 }
 
-export async function getLessonById(lessonId: string): Promise<Lesson | null> {
-  const { data, error } = await supabase.from("lessons").select("*").eq("id", lessonId).maybeSingle();
+/**
+ * Retrieves a single lesson by its original ID.
+ */
+export async function getLessonById(
+  lessonId: string
+): Promise<Lesson | null> {
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("*")
+    .eq("id", lessonId)
+    .maybeSingle();
+
   if (error) throw error;
+
   return data;
 }
 
-/** Previous/next lesson within the same topic, by display_order — powers
- * the LessonDetailPage's Previous/Complete/Next controls (Master Spec
- * section 35). Returns null for either end when there's nowhere to go. */
+/**
+ * Retrieves the previous and next lessons within the same topic.
+ */
 export async function getAdjacentLessons(
   topicId: string,
   currentDisplayOrder: number
-): Promise<{ previous: Lesson | null; next: Lesson | null }> {
+): Promise<{
+  previous: Lesson | null;
+  next: Lesson | null;
+}> {
   const [prevResult, nextResult] = await Promise.all([
     supabase
       .from("lessons")
@@ -121,6 +219,7 @@ export async function getAdjacentLessons(
       .order("display_order", { ascending: false })
       .limit(1)
       .maybeSingle(),
+
     supabase
       .from("lessons")
       .select("*")
@@ -130,28 +229,33 @@ export async function getAdjacentLessons(
       .limit(1)
       .maybeSingle(),
   ]);
+
   if (prevResult.error) throw prevResult.error;
   if (nextResult.error) throw nextResult.error;
-  return { previous: prevResult.data, next: nextResult.data };
+
+  return {
+    previous: prevResult.data,
+    next: nextResult.data,
+  };
 }
 
 /**
- * Materials attached to a lesson, with their file metadata joined. Note:
- * this returns metadata only — actually producing a downloadable link
- * requires a signed URL from Supabase Storage
- * (`supabase.storage.from(bucket).createSignedUrl(path, ttl)`), generated
- * on demand by the page that renders the download button rather than
- * here, since a signed URL is time-limited and shouldn't be cached in a
- * list fetch. See docs/database-architecture.md "Storage model" — the
- * `materials` bucket referenced there doesn't exist until you create it
- * in your own Supabase project.
+ * Retrieves published materials attached to a lesson, including
+ * associated file metadata.
+ *
+ * This returns metadata only. Download links should be generated
+ * separately using signed Supabase Storage URLs when needed.
  */
-export async function getLessonMaterials(lessonId: string): Promise<MaterialWithFile[]> {
+export async function getLessonMaterials(
+  lessonId: string
+): Promise<MaterialWithFile[]> {
   const { data, error } = await supabase
     .from("materials")
     .select("*, file:files(*)")
     .eq("lesson_id", lessonId)
     .eq("status", "published");
+
   if (error) throw error;
+
   return (data ?? []) as unknown as MaterialWithFile[];
 }
