@@ -116,7 +116,7 @@ export function RegisterPage() {
           </div>
 
           <p style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)" }}>
-            Please note: these confirmations are self-reported. Opening a WhatsApp link does not let CampusIQ verify that you actually joined or followed.
+            Please note: You can only finish creating your accounts if you join both the channel and the group.
           </p>
 
           {error && (
