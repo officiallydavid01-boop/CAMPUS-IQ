@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { LoadingScreen } from "@/components/feedback/LoadingScreen";
 import { HolographicBrain } from "@/components/branding/HolographicBrain";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -11,6 +13,18 @@ const PILLARS = [
 ];
 
 export function LandingPage() {
+  const { user, isLoading, isStaff } = useAuth();
+
+  // Wait until Supabase has restored any saved session before showing
+  // the public landing page. This avoids asking returning users to sign in.
+  if (isLoading) {
+    return <LoadingScreen label="Restoring your session…" />;
+  }
+
+  if (user) {
+    return <Navigate to={isStaff ? ROUTES.admin : ROUTES.dashboard} replace />;
+  }
+
   return (
     <div className="container" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <header className="cluster" style={{ justifyContent: "space-between", paddingBlock: "var(--space-6)" }}>
