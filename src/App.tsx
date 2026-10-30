@@ -17,6 +17,8 @@ import { CourseDetailPage } from "@/pages/courses/CourseDetailPage";
 import { TopicDetailPage } from "@/pages/courses/TopicDetailPage";
 import { LessonDetailPage } from "@/pages/lessons/LessonDetailPage";
 import { PracticePage } from "@/pages/practice/PracticePage";
+import { PracticeQuestionsPage } from "@/pages/practice/PracticeQuestionsPage";
+import { QuizPage } from "@/pages/practice/QuizPage";
 import { PracticeSessionPage } from "@/pages/practice/PracticeSessionPage";
 import { PastQuestionsPage } from "@/pages/past-questions/PastQuestionsPage";
 import { ExamsPage } from "@/pages/exams/ExamsPage";
@@ -158,6 +160,26 @@ export function App() {
             <ProtectedRoute>
               <StudentShell>
                 <PracticePage />
+              </StudentShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.practiceQuestions}
+          element={
+            <ProtectedRoute>
+              <StudentShell>
+                <PracticeQuestionsPage />
+              </StudentShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.practiceQuiz}
+          element={
+            <ProtectedRoute>
+              <StudentShell>
+                <QuizPage />
               </StudentShell>
             </ProtectedRoute>
           }

@@ -1,144 +1,107 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { PencilLine } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  BookOpenCheck,
+  ClipboardList,
+  FileClock,
+  Swords,
+  Users,
+  ChevronRight,
+} from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Select";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SkeletonText } from "@/components/ui/Skeleton";
-import { useToast } from "@/components/ui/Toast";
-import { useAuth } from "@/app/providers/AuthProvider";
-import { getMyProfile } from "@/services/academic/academicService";
-import { getCourseOfferingsForContext, listMyEnrollments, getCourseTopics } from "@/services/courses/coursesService";
-import { startPracticeSession, getMyRecentPracticeSessions } from "@/services/practice/practiceService";
+import { Badge } from "@/components/ui/Badge";
 import { ROUTES } from "@/app/router/routes";
-import type { CourseOfferingWithCourse, CourseTopic, PracticeMode, PracticeSession } from "@/types/database.types";
 
-const MODE_OPTIONS: { value: PracticeMode; label: string }[] = [
-  { value: "topic", label: "By topic" },
-  { value: "mixed", label: "Mixed topics" },
-  { value: "weak_topic", label: "Focus on weak topics" },
+const practiceOptions = [
+  {
+    title: "Practice Questions",
+    description: "Work through questions by course or topic and get instant feedback.",
+    detail: "Learn as you go",
+    icon: BookOpenCheck,
+    to: ROUTES.practiceQuestions,
+  },
+  {
+    title: "Quiz",
+    description: "Take a short quiz and see your score when you finish.",
+    detail: "Test your knowledge",
+    icon: ClipboardList,
+    to: ROUTES.practiceQuiz,
+  },
+  {
+    title: "Past Questions Practice",
+    description: "Revise previous examination questions by course, year, semester and topic.",
+    detail: "Prepare with past papers",
+    icon: FileClock,
+    to: ROUTES.pastQuestions,
+  },
+  {
+    title: "Exam Mode",
+    description: "Attempt published exams under their configured time and exam conditions.",
+    detail: "Timed assessment",
+    icon: Swords,
+    to: ROUTES.exams,
+  },
 ];
 
-/** Mode/course/topic picker + "start session" (Master Spec section 34).
- * Only offers courses the student is actually enrolled in — practice
- * against a course you haven't enrolled in wouldn't have any published
- * questions visible in a meaningful, scoped way anyway. */
 export function PracticePage() {
-  const { user } = useAuth();
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-
-  const [offerings, setOfferings] = useState<CourseOfferingWithCourse[]>([]);
-  const [offeringId, setOfferingId] = useState("");
-  const [topics, setTopics] = useState<CourseTopic[]>([]);
-  const [topicId, setTopicId] = useState("");
-  const [mode, setMode] = useState<PracticeMode>("topic");
-  const [recentSessions, setRecentSessions] = useState<PracticeSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isStarting, setIsStarting] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      try {
-        const profile = await getMyProfile(user.id);
-        if (profile?.institution_id && profile.programme_id && profile.level_id && profile.current_semester_id) {
-          const [allOfferings, enrollments, sessions] = await Promise.all([
-            getCourseOfferingsForContext({
-              institutionId: profile.institution_id,
-              programmeId: profile.programme_id,
-              levelId: profile.level_id,
-              semesterId: profile.current_semester_id,
-            }),
-            listMyEnrollments(user.id),
-            getMyRecentPracticeSessions(user.id, 5),
-          ]);
-          const enrolledIds = new Set(
-            enrollments.map((e) => (e as unknown as { course_offering_id: string }).course_offering_id)
-          );
-          setOfferings(allOfferings.filter((o) => enrolledIds.has(o.id)));
-          setRecentSessions(sessions);
-        }
-      } catch {
-        showToast("Couldn't load your practice options.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, [user, showToast]);
-
-  useEffect(() => {
-    setTopicId("");
-    setTopics([]);
-    const offering = offerings.find((o) => o.id === offeringId);
-    if (offering) getCourseTopics(offering.course_id).then(setTopics).catch(() => showToast("Couldn't load topics.", "error"));
-  }, [offeringId, offerings, showToast]);
-
-  async function handleStart() {
-    if (!user || !offeringId) return;
-    const offering = offerings.find((o) => o.id === offeringId);
-    if (!offering) return;
-    if (mode === "topic" && !topicId) {
-      showToast("Pick a topic first.", "error");
-      return;
-    }
-
-    setIsStarting(true);
-    try {
-      const session = await startPracticeSession(user.id, mode, offering.course_id, mode === "topic" ? topicId : undefined);
-      navigate(ROUTES.practiceSession.replace(":id", session.id));
-    } catch {
-      showToast("Couldn't start a practice session.", "error");
-    } finally {
-      setIsStarting(false);
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container" style={{ paddingBlock: "var(--space-8)" }}>
-        <SkeletonText lines={4} />
-      </div>
-    );
-  }
-
   return (
-    <div className="container" style={{ paddingBlock: "var(--space-8)", maxWidth: "560px" }}>
-      <h1 style={{ fontSize: "var(--text-2xl)", marginBottom: "var(--space-6)" }}>Practice</h1>
+    <div className="container" style={{ paddingBlock: "var(--space-8)", maxWidth: "900px" }}>
+      <div style={{ marginBottom: "var(--space-6)" }}>
+        <h1 style={{ fontSize: "var(--text-2xl)", marginBottom: "var(--space-2)" }}>Practice</h1>
+        <p style={{ color: "var(--text-secondary)", margin: 0 }}>Choose how you want to learn, revise or test yourself.</p>
+      </div>
 
-      {offerings.length === 0 ? (
-        <GlassCard>
-          <EmptyState icon={PencilLine} title="Enroll in a course first." description="Practice questions are scoped to courses you're enrolled in." />
-        </GlassCard>
-      ) : (
-        <GlassCard className="stack" style={{ gap: "var(--space-4)" }}>
-          <Select label="Course" placeholder="Select a course" value={offeringId} onChange={(e) => setOfferingId(e.target.value)} options={offerings.map((o) => ({ value: o.id, label: `${o.course.course_code} — ${o.course.title}` }))} />
-          <Select label="Mode" value={mode} onChange={(e) => setMode(e.target.value as PracticeMode)} options={MODE_OPTIONS} disabled={!offeringId} />
-          {mode === "topic" && (
-            <Select label="Topic" placeholder="Select a topic" value={topicId} onChange={(e) => setTopicId(e.target.value)} options={topics.map((t) => ({ value: t.id, label: t.title }))} disabled={!offeringId} />
-          )}
-          <Button onClick={handleStart} isLoading={isStarting} disabled={!offeringId}>
-            Start practice
-          </Button>
-        </GlassCard>
-      )}
-
-      {recentSessions.length > 0 && (
-        <div style={{ marginTop: "var(--space-8)" }}>
-          <h2 style={{ fontSize: "var(--text-lg)", marginBottom: "var(--space-3)" }}>Recent sessions</h2>
-          <div className="stack" style={{ gap: "var(--space-2)" }}>
-            {recentSessions.map((s) => (
-              <GlassCard key={s.id} className="cluster" style={{ justifyContent: "space-between" }}>
-                <span style={{ fontSize: "var(--text-sm)" }}>{s.mode} practice</span>
-                <span style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>
-                  {s.correct_count} / {s.question_count} correct
-                </span>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
+          gap: "var(--space-3)",
+        }}
+      >
+        {practiceOptions.map((option) => {
+          const Icon = option.icon;
+          return (
+            <Link key={option.title} to={option.to} style={{ textDecoration: "none", minWidth: 0 }}>
+              <GlassCard interactive className="stack" style={{ height: "100%", minHeight: "178px", gap: "var(--space-3)" }}>
+                <div className="cluster" style={{ justifyContent: "space-between" }}>
+                  <span
+                    style={{
+                      width: "44px",
+                      height: "44px",
+                      display: "grid",
+                      placeItems: "center",
+                      borderRadius: "var(--radius-md)",
+                      background: "rgba(0, 229, 255, 0.09)",
+                      color: "var(--accent-cyan)",
+                    }}
+                  >
+                    <Icon size={22} aria-hidden="true" />
+                  </span>
+                  <ChevronRight size={18} color="var(--text-muted)" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: "var(--text-lg)", margin: "0 0 var(--space-1)", color: "var(--text-primary)" }}>{option.title}</h2>
+                  <p style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)", margin: 0 }}>{option.description}</p>
+                </div>
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--accent-cyan)" }}>{option.detail}</span>
               </GlassCard>
-            ))}
+            </Link>
+          );
+        })}
+
+        <GlassCard className="stack" style={{ minHeight: "178px", gap: "var(--space-3)", opacity: 0.82 }}>
+          <div className="cluster" style={{ justifyContent: "space-between" }}>
+            <span style={{ width: "44px", height: "44px", display: "grid", placeItems: "center", borderRadius: "var(--radius-md)", background: "var(--bg-surface-secondary)", color: "var(--text-secondary)" }}>
+              <Users size={22} aria-hidden="true" />
+            </span>
+            <Badge tone="neutral">Coming Soon</Badge>
           </div>
-        </div>
-      )}
+          <div>
+            <h2 style={{ fontSize: "var(--text-lg)", margin: "0 0 var(--space-1)" }}>Friend Rivalry</h2>
+            <p style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)", margin: 0 }}>Challenge friends, compare scores and keep each other motivated.</p>
+          </div>
+          <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Not available yet</span>
+        </GlassCard>
+      </div>
     </div>
   );
 }

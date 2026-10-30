@@ -22,6 +22,8 @@ export const ROUTES = {
   topicDetail: "/courses/:id/topics/:topicId",
   lessonDetail: "/lessons/:id",
   practice: "/practice",
+  practiceQuestions: "/practice/questions",
+  practiceQuiz: "/practice/quiz",
   practiceSession: "/practice/:id",
   pastQuestions: "/past-questions",
   exams: "/exams",
