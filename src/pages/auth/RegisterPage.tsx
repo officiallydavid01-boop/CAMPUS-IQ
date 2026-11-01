@@ -49,15 +49,18 @@ export function RegisterPage() {
     setSubmitted(true);
   }
 
-  if (submitted) {
-    return (
-      <AuthLayout title="Check your email" subtitle="We've sent a verification link to confirm your account.">
-        <Button variant="secondary" onClick={() => navigate(ROUTES.login)}>
-          Back to login
-        </Button>
-      </AuthLayout>
-    );
-  }
+if (submitted) {
+  return (
+    <AuthLayout
+      title="Account created successfully!"
+      subtitle="Your CampusIQ account is ready. You can now log in with your email and password."
+    >
+      <Button variant="secondary" onClick={() => navigate(ROUTES.login)}>
+        Go to login
+      </Button>
+    </AuthLayout>
+  );
+}
 
   if (step === "community") {
     return (
