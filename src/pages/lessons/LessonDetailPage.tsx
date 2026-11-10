@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import "katex/dist/katex.min.css";
 import {
   ArrowLeft,
@@ -45,6 +47,55 @@ import type {
   MaterialWithFile,
 } from "@/types/database.types";
 
+
+const lessonSanitizeSchema = {
+  ...defaultSchema,
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    "svg",
+    "g",
+    "path",
+    "rect",
+    "circle",
+    "ellipse",
+    "line",
+    "polyline",
+    "polygon",
+    "text",
+    "tspan",
+    "defs",
+    "marker",
+    "title",
+    "desc",
+    "linearGradient",
+    "stop",
+    "clipPath",
+  ],
+  attributes: {
+    ...defaultSchema.attributes,
+    "*": [
+      ...(defaultSchema.attributes?.["*"] ?? []),
+      "aria-label",
+      "role",
+    ],
+    svg: ["xmlns", "viewBox", "width", "height", "preserveAspectRatio"],
+    g: ["transform", "fill", "stroke", "strokeWidth", "strokeLinecap", "strokeLinejoin", "opacity"],
+    path: ["d", "fill", "stroke", "strokeWidth", "strokeLinecap", "strokeLinejoin", "fillRule", "transform", "opacity"],
+    rect: ["x", "y", "width", "height", "rx", "ry", "fill", "stroke", "strokeWidth", "opacity"],
+    circle: ["cx", "cy", "r", "fill", "stroke", "strokeWidth", "opacity"],
+    ellipse: ["cx", "cy", "rx", "ry", "fill", "stroke", "strokeWidth", "opacity"],
+    line: ["x1", "y1", "x2", "y2", "stroke", "strokeWidth", "strokeLinecap", "opacity"],
+    polyline: ["points", "fill", "stroke", "strokeWidth", "strokeLinecap", "strokeLinejoin"],
+    polygon: ["points", "fill", "stroke", "strokeWidth", "strokeLinejoin"],
+    text: ["x", "y", "dx", "dy", "fill", "fontSize", "fontFamily", "fontWeight", "textAnchor"],
+    tspan: ["x", "y", "dx", "dy", "fill", "fontSize", "fontFamily", "fontWeight"],
+    marker: ["id", "markerWidth", "markerHeight", "refX", "refY", "orient", "markerUnits", "viewBox"],
+    linearGradient: ["id", "x1", "y1", "x2", "y2", "gradientUnits"],
+    stop: ["offset", "stopColor", "stopOpacity"],
+    clipPath: ["id", "clipPathUnits"],
+  },
+};
+
 interface LocationState {
   courseOfferingId?: string;
   topicId?: string;
@@ -83,8 +134,26 @@ function LessonMarkdown({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[
+  rehypeRaw,
+  [rehypeSanitize, lessonSanitizeSchema],
+  rehypeKatex,
+]}
         components={{
+svg: ({ children, ...props }) => (
+  <svg
+    {...props}
+    style={{
+      display: "block",
+      maxWidth: "100%",
+      height: "auto",
+      margin: "1rem auto",
+      ...props.style,
+    }}
+  >
+    {children}
+  </svg>
+),
           h1: ({ children }) => (
             <h1
               style={{
